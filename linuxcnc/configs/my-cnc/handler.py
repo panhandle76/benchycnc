@@ -95,25 +95,18 @@ class HandlerClass:
       
       # put in MDI mode
       self.c = linuxcnc.command()
-      self.c.mode(linuxcnc.MODE_MDI)
-      self.c.wait_complete(30) # wait for mode switch (max 30 seconds)
 
       self.touch_plate_height = 1                       # height of touchplate (inch)
       self.touch_plate_width = 2.205                    # width of touchplate (inch) (~56mm)
       self.ztravel_height = 0.125                       # how high to lift tool while probing X and Y (inch)
       self.zlift_height = 0.5                           # how high to lift after probing is done (inch)
+      self.probe_backoff = 0.125
 
    def run_mdi(self, command):
+      self.c.mode(linuxcnc.MODE_MDI)
+      self.c.wait_complete(30)
       self.c.mdi(command)
       self.c.wait_complete(30)  # wait for 30 seconds
-
-   def move_abs(self, command, axis, feed):
-      self.run_mdi("G90")  # absolute
-      self.run_mdi(command+" "+axis+" "+feed)
-
-   def move_inc(self, command, axis, feed):
-      self.run_mdi("G91")  # incremental
-      self.run_mdi(command+" "+axis+" "+feed)
 
    def on_btnAutoToolZero_clicked(self, button):
       # prompt user with dialog and get the results
@@ -146,26 +139,33 @@ class HandlerClass:
          self.probeXY("Y", radius)
 
       # move up enough to clear the tool
-      self.move_inc("G1", "Z"+str(self.zlift_height), "F2")
+      self.run_mdi("G91 G1 " + "Z"+str(self.zlift_height) + " F2")
 
    def probeZ(self, axis):
       print("probe " + axis);
-      # move until we hit the probe
-      self.run_mdi("G38.3 Z-4 F2")
+      # probe fast
+      self.run_mdi("G91 G38.3 Z-2 F4")
+      # backoff
+      self.run_mdi("G91 G1 " + "Z"+str(self.probe_backoff) + " F2")
+      # probe slow
+      self.run_mdi("G91 G38.3 Z-2 F2")
       # set the Z offset. This gcode will calculate the necessary Z offset (G54) for a final position of '1'
       self.run_mdi("G10 L20 P1 Z1")
       # move up a little
-      self.move_inc("G1", "Z"+str(self.ztravel_height), "F2")
+      self.run_mdi("G91 G1 " + "Z"+str(self.ztravel_height) + " F2")
 
    def probeXY(self, axis, tool_radius):
       print("probe " + axis + ":" + str(tool_radius));
-      self.run_mdi("G91")  # incremental
-      # move toward probe and stop
-      self.run_mdi("G38.3 "+axis+"2 F2")  # 15 is just some large number to move toward. we should hit touch plate before then
+      # probe fast
+      self.run_mdi("G91 G38.3 "+axis+"3 F4")
+      # backoff
+      self.run_mdi("G91 G1 " + axis+"-"+str(self.probe_backoff) + " F2")
+      # probe slow
+      self.run_mdi("G91 G38.3 "+axis+"3 F2")
       # set offset to be (touchprobe width minus tool radius)
       self.run_mdi("G10 L20 P1 " + axis + str(self.touch_plate_width-tool_radius))
       # move back roughly to the center
-      self.move_inc("G54 G1", axis+"-1", "F10")
+      self.run_mdi("G91 G54 G1 " + axis+"-1" + " F10")
 
 def get_handlers(halcomp, builder, useropts):
    return [HandlerClass(halcomp,builder,useropts)]

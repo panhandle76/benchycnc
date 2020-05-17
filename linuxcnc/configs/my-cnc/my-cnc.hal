@@ -28,7 +28,7 @@ net spindle-at-speed    => spindle.0.at-speed
 net spindle-on <= spindle.0.on
 net coolant-mist <= iocontrol.0.coolant-mist
 
-net probe-in => motion.probe-input
+#net probe-in => motion.probe-input
 
 net coolant-mist    => parport.0.pin-01-out
 net xstep           => parport.0.pin-02-out
@@ -51,7 +51,7 @@ net spindle-on      => parport.0.pin-17-out
 net home-xyz        <= parport.0.pin-10-in-not
 net home-a          <= parport.0.pin-11-in-not
 #net XXXX           <= parport.0.pin-12-in-not
-net probe-in        <= parport.0.pin-13-in-not
+#net probe-in        <= parport.0.pin-13-in-not
 net estop-ext       <= parport.0.pin-15-in-not
 
 setp stepgen.0.position-scale [JOINT_0]SCALE
