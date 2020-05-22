@@ -140,6 +140,7 @@ class HandlerClass:
 
       # move up enough to clear the tool
       self.run_mdi("G91 G1 " + "Z"+str(self.zlift_height) + " F2")
+      self.run_mdi("G90")
 
    def probeZ(self, axis):
       print("probe " + axis);
