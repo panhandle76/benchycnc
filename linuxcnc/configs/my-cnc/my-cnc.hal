@@ -7,6 +7,7 @@ loadrt hal_parport cfg="0xe010 out"
 setp parport.0.reset-time 5000
 loadrt stepgen step_type=0,0,0,0
 loadrt charge_pump
+loadusr ../../../showport/showport e010 e000 e
 net estop-out charge-pump.enable iocontrol.0.user-enable-out
 net charge-pump <= charge-pump.out
 
